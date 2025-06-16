@@ -2,14 +2,15 @@
   "name": "space-mission-messenger-server",
   "version": "1.0.0",
   "description": "Messenger webhook server for Space Mission Control",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "node-fetch": "^3.3.2"
   },
   "engines": {
     "node": "18.x"
