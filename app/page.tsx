@@ -47,18 +47,22 @@ export default function SpaceMissionControl() {
       // Set default server URL to current domain
       setNotifications((prev) => ({
         ...prev,
-        serverUrl: window.location.origin,
+        serverUrl: typeof window !== "undefined" ? window.location.origin : "",
       }))
     }
   }, [])
 
   // Save to localStorage
   useEffect(() => {
-    localStorage.setItem("space-mission-todos", JSON.stringify(todos))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("space-mission-todos", JSON.stringify(todos))
+    }
   }, [todos])
 
   useEffect(() => {
-    localStorage.setItem("space-mission-notifications", JSON.stringify(notifications))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("space-mission-notifications", JSON.stringify(notifications))
+    }
   }, [notifications])
 
   const addTodo = async () => {

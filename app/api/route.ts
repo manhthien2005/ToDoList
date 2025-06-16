@@ -16,12 +16,15 @@ export async function GET() {
       sendMessage: "/api/send-messenger",
       health: "/api/health",
     },
+    frontend: {
+      todoApp: "/",
+      description: "Beautiful Todo App with Messenger notifications",
+    },
     instructions: [
-      "1. Add environment variables on Vercel",
-      "2. Configure Facebook webhook with this URL + /api/webhook",
-      "3. Use verify token: space_mission_verify_2024",
-      "4. Send message to Facebook Page to get User ID",
-      "5. Use User ID in Todo App settings",
+      "1. Visit / for the Todo App",
+      "2. Visit /api for API info",
+      "3. Configure Facebook webhook at /api/webhook",
+      "4. Use verify token: space_mission_verify_2024",
     ],
   })
 }
