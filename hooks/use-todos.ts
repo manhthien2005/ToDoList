@@ -12,38 +12,56 @@ export function useTodos() {
   })
   const [showCelebration, setShowCelebration] = useState(false)
   const celebrationShownRef = useRef(false)
+  const [isClient, setIsClient] = useState(false)
 
-  // Load data from localStorage
+  // Set client flag
   useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Load data from localStorage (only on client)
+  useEffect(() => {
+    if (!isClient) return
+
     const savedTodos = localStorage.getItem("cute-todos")
     const savedSettings = localStorage.getItem("cute-settings")
 
     if (savedTodos) {
-      const parsedTodos = JSON.parse(savedTodos).map((todo: any) => ({
-        ...todo,
-        createdAt: new Date(todo.createdAt),
-        updatedAt: new Date(todo.updatedAt),
-      }))
-      setTodos(parsedTodos)
+      try {
+        const parsedTodos = JSON.parse(savedTodos).map((todo: any) => ({
+          ...todo,
+          createdAt: new Date(todo.createdAt),
+          updatedAt: new Date(todo.updatedAt),
+        }))
+        setTodos(parsedTodos)
+      } catch (error) {
+        console.error("Error parsing todos:", error)
+      }
     }
 
     if (savedSettings) {
-      setSettings(JSON.parse(savedSettings))
+      try {
+        setSettings(JSON.parse(savedSettings))
+      } catch (error) {
+        console.error("Error parsing settings:", error)
+      }
     }
-  }, [])
+  }, [isClient])
 
-  // Save to localStorage
+  // Save to localStorage (only on client)
   useEffect(() => {
+    if (!isClient) return
     localStorage.setItem("cute-todos", JSON.stringify(todos))
-  }, [todos])
+  }, [todos, isClient])
 
   useEffect(() => {
+    if (!isClient) return
     localStorage.setItem("cute-settings", JSON.stringify(settings))
-  }, [settings])
+  }, [settings, isClient])
 
   // Send messenger notification với browser check
   const sendMessengerNotification = async (message: string) => {
-    if (!settings.enableMessengerNotifications || !settings.messengerUserId) {
+    if (!isClient || !settings.enableMessengerNotifications || !settings.messengerUserId) {
       console.log("📴 Messenger notifications disabled or no user ID")
       return
     }
@@ -70,8 +88,8 @@ export function useTodos() {
         const result = await response.json()
         console.log("✅ Messenger notification sent successfully:", result)
 
-        // Show browser notification as backup (only in browser)
-        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+        // Show browser notification as backup
+        if ("Notification" in window && Notification.permission === "granted") {
           new Notification("🚀 Space Mission", {
             body: message,
             icon: "/favicon.ico",
@@ -86,8 +104,8 @@ export function useTodos() {
     } catch (error) {
       console.error("❌ Network error:", error)
 
-      // Fallback: Browser notification (only in browser)
-      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      // Fallback: Browser notification
+      if ("Notification" in window && Notification.permission === "granted") {
         new Notification("🚀 Space Mission (Fallback)", {
           body: message,
           icon: "/favicon.ico",
@@ -96,22 +114,26 @@ export function useTodos() {
     }
   }
 
-  // Request notification permission on first load (only in browser)
+  // Request notification permission on first load
   useEffect(() => {
     if (
-      settings.enableMessengerNotifications &&
-      typeof window !== "undefined" &&
-      "Notification" in window &&
-      Notification.permission === "default"
+      !isClient ||
+      !settings.enableMessengerNotifications ||
+      !("Notification" in window) ||
+      Notification.permission !== "default"
     ) {
-      Notification.requestPermission().then((permission) => {
-        console.log("🔔 Notification permission:", permission)
-      })
+      return
     }
-  }, [settings.enableMessengerNotifications])
 
-  // Check reminder logic với better logging
+    Notification.requestPermission().then((permission) => {
+      console.log("🔔 Notification permission:", permission)
+    })
+  }, [settings.enableMessengerNotifications, isClient])
+
+  // Check reminder logic
   useEffect(() => {
+    if (!isClient) return
+
     const checkReminders = () => {
       const now = new Date()
       const currentTime = now.toTimeString().slice(0, 5)
@@ -151,15 +173,15 @@ export function useTodos() {
 
     // Check every hour
     const interval = setInterval(checkReminders, 60 * 60 * 1000)
-
-    // Also check immediately (for testing)
     checkReminders()
 
     return () => clearInterval(interval)
-  }, [todos, settings])
+  }, [todos, settings, isClient])
 
   // Check if we need to reset completed status
   useEffect(() => {
+    if (!isClient) return
+
     const checkReset = () => {
       const now = new Date()
       const today = now.toISOString().split("T")[0]
@@ -184,12 +206,14 @@ export function useTodos() {
     }
 
     checkReset()
-    const interval = setInterval(checkReset, 60000) // Check every minute
+    const interval = setInterval(checkReset, 60000)
     return () => clearInterval(interval)
-  }, [settings.resetTime, settings.lastResetDate])
+  }, [settings.resetTime, settings.lastResetDate, isClient])
 
   // Check for celebration
   useEffect(() => {
+    if (!isClient) return
+
     const completedCount = todos.filter((todo) => todo.completed).length
     const totalCount = todos.length
 
@@ -212,7 +236,7 @@ export function useTodos() {
     if (completedCount < totalCount) {
       celebrationShownRef.current = false
     }
-  }, [todos])
+  }, [todos, isClient])
 
   const addTodo = (text: string) => {
     const newTodo: Todo = {
