@@ -6,11 +6,16 @@ export async function POST(request: NextRequest) {
   try {
     const { userId, message } = await request.json()
 
+    console.log("=== 📱 TODO APP MESSAGE REQUEST ===")
+    console.log("👤 User ID:", userId)
+    console.log("💬 Message preview:", message.substring(0, 100) + "...")
+
     if (!userId || !message) {
       return NextResponse.json({ error: "Missing userId or message" }, { status: 400 })
     }
 
     if (!PAGE_ACCESS_TOKEN) {
+      console.error("❌ PAGE_ACCESS_TOKEN not configured")
       return NextResponse.json({ error: "PAGE_ACCESS_TOKEN not configured" }, { status: 500 })
     }
 
@@ -27,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     if (response.ok) {
       const result = await response.json()
-      console.log("✅ Messenger notification sent successfully")
+      console.log("✅ Todo app notification sent successfully!")
       return NextResponse.json({
         success: true,
         message: "Notification sent successfully",
