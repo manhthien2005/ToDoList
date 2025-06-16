@@ -7,7 +7,6 @@ import { AddTodo } from "./add-todo"
 import { SettingsPanel } from "./settings-panel"
 import { ProgressBar } from "./progress-bar"
 import { Celebration } from "./celebration"
-import { TestPanel } from "./test-panel"
 import { Star, Zap } from "lucide-react"
 
 export default function ClientTodoApp() {
@@ -70,14 +69,11 @@ export default function ClientTodoApp() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-2">
             🚀 Space Mission Control 🌌
           </h1>
-          <p className="text-gray-300">Space Ship To-do-list</p>
+          <p className="text-gray-300">Quản lý nhiệm vụ với thông báo Messenger</p>
         </div>
 
         {/* Settings */}
         <SettingsPanel settings={settings} onSettingsChange={updateSettings} />
-
-        {/* Test Panel */}
-        <TestPanel settings={settings} todos={todos} />
 
         {/* Progress */}
         <ProgressBar completed={completedCount} total={todos.length} />

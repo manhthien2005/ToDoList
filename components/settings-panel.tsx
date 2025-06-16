@@ -3,7 +3,7 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Clock, MessageCircle } from "lucide-react"
+import { Clock, MessageCircle, Info } from "lucide-react"
 import type { Settings } from "../types/todo"
 
 interface SettingsPanelProps {
@@ -52,7 +52,17 @@ export function SettingsPanel({ settings, onSettingsChange }: SettingsPanelProps
               onChange={(e) => onSettingsChange({ messengerUserId: e.target.value })}
               className="rounded-xl border-slate-600 focus:border-purple-400 bg-slate-700/50 text-gray-200"
             />
-            <p className="text-xs text-gray-400">Cách lấy User ID: Nhắn tin cho bot, check logs để lấy sender.id</p>
+            <div className="flex items-start gap-2 text-xs text-gray-400 bg-slate-700/30 rounded-lg p-3">
+              <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-gray-300 mb-1">Cách lấy User ID:</p>
+                <ol className="space-y-1 ml-4 list-decimal">
+                  <li>Nhắn tin "hello" vào Facebook Page của bot</li>
+                  <li>Bot sẽ trả lời kèm User ID của bạn</li>
+                  <li>Copy User ID và paste vào ô trên</li>
+                </ol>
+              </div>
+            </div>
           </div>
         )}
       </div>
