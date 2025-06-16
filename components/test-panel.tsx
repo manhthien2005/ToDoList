@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -15,25 +15,38 @@ interface TestPanelProps {
 export function TestPanel({ settings, todos }: TestPanelProps) {
   const [testResults, setTestResults] = useState<Array<{ type: string; message: string; success: boolean }>>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | null>(null)
+
+  // Check notification permission on mount (client-side only)
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotificationPermission(Notification.permission)
+    }
+  }, [])
 
   const addTestResult = (type: string, message: string, success: boolean) => {
     setTestResults((prev) => [...prev, { type, message, success, timestamp: Date.now() }])
   }
 
   const requestNotificationPermission = async () => {
-    if (!("Notification" in window)) {
+    if (typeof window === "undefined" || !("Notification" in window)) {
       addTestResult("Browser", "❌ Browser không hỗ trợ notifications", false)
       return
     }
 
-    const permission = await Notification.requestPermission()
-    addTestResult("Browser", `🔔 Notification permission: ${permission}`, permission === "granted")
+    try {
+      const permission = await Notification.requestPermission()
+      setNotificationPermission(permission)
+      addTestResult("Browser", `🔔 Notification permission: ${permission}`, permission === "granted")
 
-    if (permission === "granted") {
-      new Notification("🚀 Space Mission Test", {
-        body: "Browser notifications đã hoạt động!",
-        icon: "/favicon.ico",
-      })
+      if (permission === "granted") {
+        new Notification("🚀 Space Mission Test", {
+          body: "Browser notifications đã hoạt động!",
+          icon: "/favicon.ico",
+        })
+      }
+    } catch (error) {
+      addTestResult("Browser", `❌ Lỗi request permission: ${error}`, false)
     }
   }
 
@@ -143,8 +156,8 @@ export function TestPanel({ settings, todos }: TestPanelProps) {
           <Badge variant={settings.messengerUserId ? "default" : "secondary"}>
             {settings.messengerUserId ? "✅ User ID Set" : "❌ No User ID"}
           </Badge>
-          <Badge variant={Notification.permission === "granted" ? "default" : "secondary"}>
-            {Notification.permission === "granted" ? "✅ Browser Notifications" : "❌ No Browser Permission"}
+          <Badge variant={notificationPermission === "granted" ? "default" : "secondary"}>
+            {notificationPermission === "granted" ? "✅ Browser Notifications" : "❌ No Browser Permission"}
           </Badge>
         </div>
 

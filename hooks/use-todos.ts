@@ -41,7 +41,7 @@ export function useTodos() {
     localStorage.setItem("cute-settings", JSON.stringify(settings))
   }, [settings])
 
-  // Send messenger notification với better error handling
+  // Send messenger notification với browser check
   const sendMessengerNotification = async (message: string) => {
     if (!settings.enableMessengerNotifications || !settings.messengerUserId) {
       console.log("📴 Messenger notifications disabled or no user ID")
@@ -70,8 +70,8 @@ export function useTodos() {
         const result = await response.json()
         console.log("✅ Messenger notification sent successfully:", result)
 
-        // Show browser notification as backup
-        if (Notification.permission === "granted") {
+        // Show browser notification as backup (only in browser)
+        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
           new Notification("🚀 Space Mission", {
             body: message,
             icon: "/favicon.ico",
@@ -86,8 +86,8 @@ export function useTodos() {
     } catch (error) {
       console.error("❌ Network error:", error)
 
-      // Fallback: Browser notification
-      if (Notification.permission === "granted") {
+      // Fallback: Browser notification (only in browser)
+      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
         new Notification("🚀 Space Mission (Fallback)", {
           body: message,
           icon: "/favicon.ico",
@@ -96,9 +96,14 @@ export function useTodos() {
     }
   }
 
-  // Request notification permission on first load
+  // Request notification permission on first load (only in browser)
   useEffect(() => {
-    if (settings.enableMessengerNotifications && Notification.permission === "default") {
+    if (
+      settings.enableMessengerNotifications &&
+      typeof window !== "undefined" &&
+      "Notification" in window &&
+      Notification.permission === "default"
+    ) {
       Notification.requestPermission().then((permission) => {
         console.log("🔔 Notification permission:", permission)
       })
