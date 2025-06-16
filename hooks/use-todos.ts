@@ -65,9 +65,9 @@ export function useTodos() {
       return
     }
 
-    // 🚨 THAY ĐỔI URL NÀY THÀNH SERVER THẬT CỦA BẠN!
-    // Ví dụ: https://space-mission-server-abc123.vercel.app
-    const SERVER_URL = "https://todoship.vercel.app"
+    // 🚀 THAY ĐỔI URL NÀY THÀNH URL THẬT SAU KHI DEPLOY!
+    // Ví dụ: https://space-mission-abc123.vercel.app
+    const SERVER_URL = "https://space-mission-abc123.vercel.app"
 
     try {
       const response = await fetch(`${SERVER_URL}/send-messenger`, {
