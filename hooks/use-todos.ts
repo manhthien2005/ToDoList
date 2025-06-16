@@ -66,7 +66,8 @@ export function useTodos() {
     }
 
     // 🚨 THAY ĐỔI URL NÀY THÀNH SERVER THẬT CỦA BẠN!
-    const SERVER_URL = "https://your-messenger-server.vercel.app"
+    // Ví dụ: https://space-mission-server-abc123.vercel.app
+    const SERVER_URL = "https://todoship.vercel.app"
 
     try {
       const response = await fetch(`${SERVER_URL}/send-messenger`, {
@@ -82,6 +83,8 @@ export function useTodos() {
       })
 
       if (response.ok) {
+        console.log("✅ Messenger notification sent successfully!")
+
         // Show browser notification as confirmation
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification("🚀 Space Mission", {
@@ -89,8 +92,12 @@ export function useTodos() {
             icon: "/favicon.ico",
           })
         }
+      } else {
+        console.error("❌ Failed to send messenger notification:", response.status)
       }
     } catch (error) {
+      console.error("❌ Network error:", error)
+
       // Fallback: Browser notification
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("🚀 Space Mission", {
