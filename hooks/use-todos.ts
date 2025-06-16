@@ -59,18 +59,22 @@ export function useTodos() {
     localStorage.setItem("cute-settings", JSON.stringify(settings))
   }, [settings, isClient])
 
-  // Send messenger notification với browser check
+  // Send messenger notification với REAL API
   const sendMessengerNotification = async (message: string) => {
     if (!isClient || !settings.enableMessengerNotifications || !settings.messengerUserId) {
       console.log("📴 Messenger notifications disabled or no user ID")
       return
     }
 
+    // THAY ĐỔI URL NÀY THÀNH SERVER THẬT CỦA BẠN!
+    const SERVER_URL = "https://your-messenger-server.vercel.app" // ← SỬA URL NÀY
+
     try {
-      console.log("🚀 Sending messenger notification:", message)
+      console.log("🚀 Sending REAL messenger notification:", message)
+      console.log("📡 Server URL:", SERVER_URL)
       console.log("👤 User ID:", settings.messengerUserId)
 
-      const response = await fetch("/api/send-messenger", {
+      const response = await fetch(`${SERVER_URL}/send-messenger`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,12 +90,12 @@ export function useTodos() {
 
       if (response.ok) {
         const result = await response.json()
-        console.log("✅ Messenger notification sent successfully:", result)
+        console.log("✅ REAL Messenger notification sent successfully:", result)
 
         // Show browser notification as backup
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification("🚀 Space Mission", {
-            body: message,
+            body: "Tin nhắn đã được gửi qua Messenger!",
             icon: "/favicon.ico",
           })
         }
@@ -100,6 +104,14 @@ export function useTodos() {
         console.error("❌ Failed to send messenger notification:")
         console.error("Status:", response.status)
         console.error("Response:", errorText)
+
+        // Show error notification
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("❌ Space Mission Error", {
+            body: "Không thể gửi tin nhắn Messenger",
+            icon: "/favicon.ico",
+          })
+        }
       }
     } catch (error) {
       console.error("❌ Network error:", error)
@@ -114,7 +126,7 @@ export function useTodos() {
     }
   }
 
-  // Request notification permission on first load
+  // Rest of the code remains the same...
   useEffect(() => {
     if (
       !isClient ||
@@ -130,7 +142,6 @@ export function useTodos() {
     })
   }, [settings.enableMessengerNotifications, isClient])
 
-  // Check reminder logic
   useEffect(() => {
     if (!isClient) return
 
@@ -164,21 +175,18 @@ export function useTodos() {
         hasUserId: !!settings.messengerUserId,
       })
 
-      // Send notification if conditions are met
       if ((hoursUntilReset === 3 || hoursUntilReset === 4) && incompleteTodos > 0) {
         const message = `🚀 Space Mission Alert! Bạn còn ${hoursUntilReset} tiếng để hoàn thành ${incompleteTodos} nhiệm vụ trước khi reset!`
         sendMessengerNotification(message)
       }
     }
 
-    // Check every hour
     const interval = setInterval(checkReminders, 60 * 60 * 1000)
     checkReminders()
 
     return () => clearInterval(interval)
   }, [todos, settings, isClient])
 
-  // Check if we need to reset completed status
   useEffect(() => {
     if (!isClient) return
 
@@ -210,7 +218,6 @@ export function useTodos() {
     return () => clearInterval(interval)
   }, [settings.resetTime, settings.lastResetDate, isClient])
 
-  // Check for celebration
   useEffect(() => {
     if (!isClient) return
 
@@ -232,7 +239,6 @@ export function useTodos() {
       sendMessengerNotification("🎉 Chúc mừng! Bạn đã hoàn thành tất cả nhiệm vụ hôm nay! 🚀")
     }
 
-    // Reset flag when not all todos are completed
     if (completedCount < totalCount) {
       celebrationShownRef.current = false
     }
