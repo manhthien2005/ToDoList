@@ -41,38 +41,71 @@ export function useTodos() {
     localStorage.setItem("cute-settings", JSON.stringify(settings))
   }, [settings])
 
-  // Send messenger notification - CẬP NHẬT URL SERVER
+  // Send messenger notification với better error handling
   const sendMessengerNotification = async (message: string) => {
     if (!settings.enableMessengerNotifications || !settings.messengerUserId) {
-      console.log("Messenger notifications disabled or no user ID")
+      console.log("📴 Messenger notifications disabled or no user ID")
       return
     }
 
     try {
-      console.log("Sending messenger notification:", message)
+      console.log("🚀 Sending messenger notification:", message)
+      console.log("👤 User ID:", settings.messengerUserId)
 
-      // THAY ĐỔI URL NÀY THÀNH SERVER CỦA BẠN
-      const response = await fetch("https://your-server-url.vercel.app/send-messenger", {
+      const response = await fetch("/api/send-messenger", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({
           userId: settings.messengerUserId,
           message: message,
         }),
       })
 
+      console.log("📊 Response status:", response.status)
+
       if (response.ok) {
-        console.log("✅ Messenger notification sent successfully")
+        const result = await response.json()
+        console.log("✅ Messenger notification sent successfully:", result)
+
+        // Show browser notification as backup
+        if (Notification.permission === "granted") {
+          new Notification("🚀 Space Mission", {
+            body: message,
+            icon: "/favicon.ico",
+          })
+        }
       } else {
         const errorText = await response.text()
-        console.error("❌ Failed to send messenger notification:", response.status, errorText)
+        console.error("❌ Failed to send messenger notification:")
+        console.error("Status:", response.status)
+        console.error("Response:", errorText)
       }
     } catch (error) {
-      console.error("❌ Messenger notification error:", error)
+      console.error("❌ Network error:", error)
+
+      // Fallback: Browser notification
+      if (Notification.permission === "granted") {
+        new Notification("🚀 Space Mission (Fallback)", {
+          body: message,
+          icon: "/favicon.ico",
+        })
+      }
     }
   }
 
-  // Check reminder logic
+  // Request notification permission on first load
+  useEffect(() => {
+    if (settings.enableMessengerNotifications && Notification.permission === "default") {
+      Notification.requestPermission().then((permission) => {
+        console.log("🔔 Notification permission:", permission)
+      })
+    }
+  }, [settings.enableMessengerNotifications])
+
+  // Check reminder logic với better logging
   useEffect(() => {
     const checkReminders = () => {
       const now = new Date()
@@ -93,22 +126,30 @@ export function useTodos() {
       const hoursUntilReset = Math.floor(minutesUntilReset / 60)
       const incompleteTodos = todos.filter((todo) => !todo.completed).length
 
-      console.log("Reminder check:", {
+      console.log("⏰ Reminder check:", {
         currentTime,
         resetTime,
         hoursUntilReset,
+        minutesUntilReset: minutesUntilReset % 60,
         incompleteTodos,
         shouldNotify: (hoursUntilReset === 3 || hoursUntilReset === 4) && incompleteTodos > 0,
+        messengerEnabled: settings.enableMessengerNotifications,
+        hasUserId: !!settings.messengerUserId,
       })
 
+      // Send notification if conditions are met
       if ((hoursUntilReset === 3 || hoursUntilReset === 4) && incompleteTodos > 0) {
         const message = `🚀 Space Mission Alert! Bạn còn ${hoursUntilReset} tiếng để hoàn thành ${incompleteTodos} nhiệm vụ trước khi reset!`
         sendMessengerNotification(message)
       }
     }
 
+    // Check every hour
     const interval = setInterval(checkReminders, 60 * 60 * 1000)
+
+    // Also check immediately (for testing)
     checkReminders()
+
     return () => clearInterval(interval)
   }, [todos, settings])
 
@@ -119,7 +160,16 @@ export function useTodos() {
       const today = now.toISOString().split("T")[0]
       const currentTime = now.toTimeString().slice(0, 5)
 
+      console.log("🔄 Reset check:", {
+        today,
+        lastResetDate: settings.lastResetDate,
+        currentTime,
+        resetTime: settings.resetTime,
+        shouldReset: today !== settings.lastResetDate && currentTime >= settings.resetTime,
+      })
+
       if (today !== settings.lastResetDate && currentTime >= settings.resetTime) {
+        console.log("🌅 Resetting todos for new day")
         setTodos((prev) => prev.map((todo) => ({ ...todo, completed: false })))
         setSettings((prev) => ({ ...prev, lastResetDate: today }))
         celebrationShownRef.current = false
@@ -129,7 +179,7 @@ export function useTodos() {
     }
 
     checkReset()
-    const interval = setInterval(checkReset, 60000)
+    const interval = setInterval(checkReset, 60000) // Check every minute
     return () => clearInterval(interval)
   }, [settings.resetTime, settings.lastResetDate])
 
@@ -138,13 +188,22 @@ export function useTodos() {
     const completedCount = todos.filter((todo) => todo.completed).length
     const totalCount = todos.length
 
+    console.log("🎉 Celebration check:", {
+      completedCount,
+      totalCount,
+      allCompleted: totalCount > 0 && completedCount === totalCount,
+      celebrationShown: celebrationShownRef.current,
+    })
+
     if (totalCount > 0 && completedCount === totalCount && !celebrationShownRef.current) {
+      console.log("🎊 Triggering celebration!")
       setShowCelebration(true)
       celebrationShownRef.current = true
 
       sendMessengerNotification("🎉 Chúc mừng! Bạn đã hoàn thành tất cả nhiệm vụ hôm nay! 🚀")
     }
 
+    // Reset flag when not all todos are completed
     if (completedCount < totalCount) {
       celebrationShownRef.current = false
     }
@@ -159,29 +218,35 @@ export function useTodos() {
       updatedAt: new Date(),
     }
     setTodos((prev) => [...prev, newTodo])
+    console.log("➕ Added todo:", newTodo)
   }
 
   const updateTodo = (id: string, updates: Partial<Todo>) => {
     setTodos((prev) => prev.map((todo) => (todo.id === id ? { ...todo, ...updates, updatedAt: new Date() } : todo)))
+    console.log("✏️ Updated todo:", id, updates)
   }
 
   const deleteTodo = (id: string) => {
     setTodos((prev) => prev.filter((todo) => todo.id !== id))
+    console.log("🗑️ Deleted todo:", id)
   }
 
   const toggleTodo = (id: string) => {
     setTodos((prev) =>
       prev.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed, updatedAt: new Date() } : todo)),
     )
+    console.log("✅ Toggled todo:", id)
   }
 
   const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }))
+    console.log("⚙️ Updated settings:", newSettings)
   }
 
   const closeCelebration = () => {
     setShowCelebration(false)
     celebrationShownRef.current = true
+    console.log("🎊 Closed celebration")
   }
 
   return {
