@@ -1,30 +1,31 @@
-# New Project
+# Space Mission Messenger Server
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+## Setup Instructions
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/dapgacon2112-gmailcoms-projects/v0-new-project-adyd4r5kbwo)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/AdyD4r5kbwO)
+### 1. Deploy to Vercel
+\`\`\`bash
+npm install
+vercel
+\`\`\`
 
-## Overview
+### 2. Add Environment Variables on Vercel
+- `VERIFY_TOKEN`: space_mission_verify_2024
+- `PAGE_ACCESS_TOKEN`: (get from Facebook Page)
+- `APP_SECRET`: (get from Facebook App)
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+### 3. Configure Facebook Webhook
+- Callback URL: https://your-server.vercel.app/webhook
+- Verify Token: space_mission_verify_2024
 
-## Deployment
+### 4. Test
+- Send message to Facebook Page
+- Check logs for User ID
+- Use User ID in Todo App
 
-Your project is live at:
-
-**[https://vercel.com/dapgacon2112-gmailcoms-projects/v0-new-project-adyd4r5kbwo](https://vercel.com/dapgacon2112-gmailcoms-projects/v0-new-project-adyd4r5kbwo)**
-
-## Build your app
-
-Continue building your app on:
-
-**[https://v0.dev/chat/projects/AdyD4r5kbwO](https://v0.dev/chat/projects/AdyD4r5kbwO)**
-
-## How It Works
-
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+## Endpoints
+- GET `/` - Server info
+- GET `/webhook` - Facebook verification
+- POST `/webhook` - Receive messages
+- POST `/send-messenger` - Send messages
+- POST `/test-send` - Test messaging
+- GET `/health` - Health check
